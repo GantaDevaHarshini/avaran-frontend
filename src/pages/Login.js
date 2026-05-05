@@ -1,35 +1,40 @@
 import { useState } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../api/client";
 
 function Login({ setUser }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = () => {
-  axios.post("http://localhost:8081/auth/login", {
-    email,
-    password
-  }).then(res => {
-    if (res.data) {
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (!email || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("user", JSON.stringify(res.data));
       setUser(res.data);
-
-      // ✅ ADD THIS LINE HERE
-      window.location.href = "/";
-      
-    } else {
-      alert("Invalid credentials");
+      navigate("/");
+    } catch {
+      setError("Invalid email or password.");
+    } finally {
+      setIsSubmitting(false);
     }
-  });
-};
-
+  };
 
   return (
     <div className="h-screen flex items-center justify-center bg-[#f9f5f5]">
-
-      <div className="bg-white p-10 rounded-2xl shadow-lg w-96">
-
+      <form onSubmit={handleLogin} className="bg-white p-10 rounded-lg shadow-lg w-96">
         <h2 className="text-3xl font-bold text-center text-[#800020] mb-6">
           AVARAN
         </h2>
@@ -37,6 +42,7 @@ function Login({ setUser }) {
         <input
           type="email"
           placeholder="Email"
+          value={email}
           className="w-full border p-3 mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -44,28 +50,30 @@ function Login({ setUser }) {
         <input
           type="password"
           placeholder="Password"
+          value={password}
           className="w-full border p-3 mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
         <button
-          onClick={handleLogin}
-          className="w-full bg-[#800020] text-white py-3 rounded-lg hover:bg-[#b91c1c]"
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-[#800020] text-white py-3 rounded-lg hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Login
+          {isSubmitting ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-center mt-4 text-sm">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <Link to="/register" className="text-[#800020] font-semibold">
             Register
           </Link>
         </p>
-
-      </div>
+      </form>
     </div>
   );
-  
 }
 
 export default Login;
