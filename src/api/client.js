@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const api = axios.create({
+const api = axios.post("https://your-render-url/auth/register")({
   baseURL: process.env.REACT_APP_API_URL || "https://avaran-backend.onrender.com",
   headers: {
     "Content-Type": "application/json",
